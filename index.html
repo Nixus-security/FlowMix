@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flow Mix</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ─── TITLEBAR ─── -->
+  <header class="titlebar">
+    <div class="titlebar-left">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" fill="oklch(65% 0.22 285 / 0.15)" stroke="oklch(65% 0.22 285)" stroke-width="1.5"/>
+            <path d="M8 9l8 3-8 3V9z" fill="oklch(65% 0.22 285)"/>
+            <circle cx="18" cy="7" r="2" fill="oklch(65% 0.22 285 / 0.6)"/>
+          </svg>
+        </div>
+        <span class="logo-text">Flow <em>Mix</em></span>
+      </div>
+    </div>
+
+    <div class="titlebar-center">
+      <div class="now-playing-info">
+        <div class="now-playing-title" id="npTitle">Aucun morceau chargé</div>
+        <div class="now-playing-meta" id="npMeta">Glissez des fichiers audio pour commencer</div>
+      </div>
+    </div>
+
+    <div class="titlebar-right">
+      <div class="bpm-display">
+        <span class="bpm-value" id="bpmValue">---</span>
+        <span class="bpm-label">BPM</span>
+      </div>
+      <div class="ai-badge">
+        <span class="ai-dot"></span>
+        IA Active
+      </div>
+    </div>
+  </header>
+
+  <!-- ─── WORKSPACE ─── -->
+  <main class="workspace">
+
+    <!-- LEFT PANEL: LIBRARY -->
+    <aside class="panel-library">
+      <div class="panel-header">
+        <span class="panel-title">Bibliothèque</span>
+        <span class="track-count" id="trackCount">0 titres</span>
+      </div>
+
+      <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" class="hidden-input" multiple accept="audio/*">
+        <div class="dropzone-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M12 16V8m0 0l-3 3m3-3l3 3"/>
+            <path d="M4 16.8V18a2 2 0 002 2h12a2 2 0 002-2v-1.2"/>
+          </svg>
+        </div>
+        <div class="dropzone-label">Déposer des fichiers audio</div>
+        <div class="dropzone-sub">MP3, WAV, FLAC, AAC, OGG</div>
+      </div>
+
+      <div class="track-list" id="trackList">
+        <div class="empty-library" id="emptyLibrary">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" opacity="0.3">
+            <path d="M9 18V5l12-2v13M9 18a3 3 0 11-6 0 3 3 0 016 0zM21 16a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span>Votre bibliothèque est vide</span>
+        </div>
+      </div>
+
+      <div class="queue-next-indicator" id="queueNext" style="display:none">
+        <span class="queue-next-label">Suivant</span>
+        <span class="queue-arrow">→</span>
+        <span class="queue-next-name" id="queueNextName">—</span>
+      </div>
+
+      <div class="status-strip">
+        <span class="status-dot"></span>
+        <span class="status-text" id="statusText">Prêt</span>
+      </div>
+    </aside>
+
+    <!-- CENTER: DECKS + VISUALIZER -->
+    <section class="deck-center">
+      <div class="decks-top">
+        <div class="deck-a">
+          <div class="deck-label">Deck A</div>
+          <div class="deck-track-name" id="deckAName">—</div>
+          <div class="deck-time" id="deckATime">0:00 / 0:00</div>
+        </div>
+
+        <div class="transition-indicator">
+          <span class="transition-label">Transition</span>
+          <div class="transition-bar">
+            <div class="transition-fill" id="transitionFill"></div>
+          </div>
+          <span class="transition-label" id="transitionStatus" style="color:var(--text-3); font-size:8px;">—</span>
+        </div>
+
+        <div class="deck-b">
+          <div class="deck-label">Deck B</div>
+          <div class="deck-track-name" id="deckBName">—</div>
+          <div class="deck-time" id="deckBTime">0:00 / 0:00</div>
+        </div>
+      </div>
+
+      <div class="deck-wrapper">
+        <div class="deck-wf" id="deckAWf">
+          <canvas class="deck-wf-canvas" id="waveformA"></canvas>
+          <span class="deck-wf-label deck-wf-label-a">A</span>
+          <span class="deck-wf-time" id="waveformATime">0:00</span>
+        </div>
+        <div class="deck-wf" id="deckBWf">
+          <canvas class="deck-wf-canvas" id="waveformB"></canvas>
+          <span class="deck-wf-label deck-wf-label-b">B</span>
+          <span class="deck-wf-time" id="waveformBTime">0:00</span>
+        </div>
+      </div>
+
+      <div class="visualizer-section">
+        <div class="visualizer-canvas-wrap">
+          <canvas class="visualizer-canvas" id="visualizer"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: EFFECTS -->
+    <aside class="panel-effects">
+      <div class="effects-section">
+        <div class="effects-section-title">Equalizer</div>
+        <div class="eq-row">
+          <div class="knob-wrap">
+            <span class="knob-label">Bass</span>
+            <div class="knob" data-name="bass" data-value="50">
+              <svg class="knob-svg" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="16" fill="var(--bg-elevated)" stroke="var(--border)" stroke-width="1.5"/>
+                <circle cx="22" cy="22" r="10" fill="var(--bg-raised)" stroke="var(--border-sub)" stroke-width="1"/>
+                <path class="knob-arc" d="" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+                <line class="knob-indicator" x1="22" y1="22" x2="22" y2="9" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="knob-value" data-for="bass">0 dB</span>
+          </div>
+          <div class="knob-wrap">
+            <span class="knob-label">Mid</span>
+            <div class="knob" data-name="mid" data-value="50">
+              <svg class="knob-svg" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="16" fill="var(--bg-elevated)" stroke="var(--border)" stroke-width="1.5"/>
+                <circle cx="22" cy="22" r="10" fill="var(--bg-raised)" stroke="var(--border-sub)" stroke-width="1"/>
+                <path class="knob-arc" d="" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+                <line class="knob-indicator" x1="22" y1="22" x2="22" y2="9" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="knob-value" data-for="mid">0 dB</span>
+          </div>
+          <div class="knob-wrap">
+            <span class="knob-label">Treble</span>
+            <div class="knob" data-name="treble" data-value="50">
+              <svg class="knob-svg" viewBox="0 0 44 44">
+                <circle cx="22" cy="22" r="16" fill="var(--bg-elevated)" stroke="var(--border)" stroke-width="1.5"/>
+                <circle cx="22" cy="22" r="10" fill="var(--bg-raised)" stroke="var(--border-sub)" stroke-width="1"/>
+                <path class="knob-arc" d="" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round"/>
+                <line class="knob-indicator" x1="22" y1="22" x2="22" y2="9" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="knob-value" data-for="treble">0 dB</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="effects-section">
+        <div class="effects-section-title">Effets</div>
+        <div class="effect-row">
+          <div class="effect-control">
+            <span class="effect-label">Reverb</span>
+            <div class="effect-slider-wrap" data-effect="reverb">
+              <div class="effect-slider-fill" style="width:20%">
+                <div class="effect-slider-thumb"></div>
+              </div>
+            </div>
+            <span class="effect-value">20%</span>
+          </div>
+          <div class="effect-control">
+            <span class="effect-label">Delay</span>
+            <div class="effect-slider-wrap" data-effect="delay">
+              <div class="effect-slider-fill" style="width:0%">
+                <div class="effect-slider-thumb"></div>
+              </div>
+            </div>
+            <span class="effect-value">0%</span>
+          </div>
+          <div class="effect-control">
+            <span class="effect-label">Filter</span>
+            <div class="effect-slider-wrap" data-effect="filter">
+              <div class="effect-slider-fill" style="width:50%">
+                <div class="effect-slider-thumb"></div>
+              </div>
+            </div>
+            <span class="effect-value">50%</span>
+          </div>
+          <div class="effect-control">
+            <span class="effect-label">Distort</span>
+            <div class="effect-slider-wrap" data-effect="distortion">
+              <div class="effect-slider-fill" style="width:0%">
+                <div class="effect-slider-thumb"></div>
+              </div>
+            </div>
+            <span class="effect-value">0%</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="crossfade-section">
+        <div class="panel-header" style="padding:0; border:none; margin-bottom:10px">
+          <span class="panel-title">Crossfader</span>
+        </div>
+        <div class="crossfade-labels">
+          <span class="crossfade-tag crossfade-tag-a">A</span>
+          <span class="crossfade-tag crossfade-tag-b">B</span>
+        </div>
+        <div class="crossfade-slider-wrap">
+          <div class="crossfade-track">
+            <div class="crossfade-fill-a" id="crossfillA" style="width:50%"></div>
+            <div class="crossfade-fill-b" id="crossfillB" style="width:50%"></div>
+            <div class="crossfade-thumb" id="crossThumb" style="left:50%"></div>
+          </div>
+          <input type="range" class="crossfade-input" id="crossfader" min="0" max="100" value="50">
+        </div>
+      </div>
+
+      <div class="bpm-section">
+        <div class="effects-section-title" style="margin-bottom:0">Contrôle BPM</div>
+        <div class="bpm-controls">
+          <div class="bpm-btn" id="bpmMinus">−</div>
+          <div class="bpm-number" id="bpmControl">128</div>
+          <div class="bpm-btn" id="bpmPlus">+</div>
+        </div>
+        <div style="margin-top:6px; font-size:9px; color:var(--text-3)">
+          Ajustement tempo pour transitions optimales
+        </div>
+      </div>
+
+      <div class="effects-section">
+        <div class="effects-section-title">Analyse IA</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:10px; color:var(--text-2)">Compatibilité</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--green)" id="compatScore">—</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:10px; color:var(--text-2)">Énergie</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--accent)" id="energyScore">—</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <span style="font-size:10px; color:var(--text-2)">Transition prévue</span>
+            <span style="font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--amber)" id="transTime">—</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <!-- ─── TRANSPORT ─── -->
+  <footer class="transport">
+    <div class="transport-left">
+      <div class="transport-controls">
+        <button class="ctrl-btn" id="btnPrev" title="Précédent">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 5L5 12l14 7V5zM5 5v14"/></svg>
+        </button>
+        <button class="ctrl-btn play-btn" id="btnPlay" title="Lecture / Pause">
+          <svg id="iconPlay" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <svg id="iconPause" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg>
+        </button>
+        <button class="ctrl-btn" id="btnNext" title="Suivant">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M5 5l14 7L5 19V5zM19 5v14"/></svg>
+        </button>
+      </div>
+
+      <div class="volume-control">
+        <svg class="volume-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07"/>
+        </svg>
+        <input type="range" class="range-input volume-slider" id="volumeSlider" min="0" max="100" value="80">
+      </div>
+    </div>
+
+    <div class="transport-center">
+      <div class="progress-times">
+        <span class="time-display" id="timeElapsed">0:00</span>
+        <span class="time-display" id="timeDuration">0:00</span>
+      </div>
+      <div class="progress-track" id="progressTrack">
+        <div class="progress-fill" id="progressFill">
+          <div class="progress-thumb"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="transport-right">
+      <div class="auto-mix-toggle" id="autoMixToggle">
+        <div class="toggle-track on" id="autoMixTrack">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-label">Auto Mix</span>
+      </div>
+      <div class="auto-mix-toggle" id="aiToggle">
+        <div class="toggle-track on" id="aiTrack">
+          <div class="toggle-thumb"></div>
+        </div>
+        <span class="toggle-label">IA</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

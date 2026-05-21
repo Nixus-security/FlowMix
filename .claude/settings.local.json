@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find /home/antho/FlowMix/FlowMix/src -type f 2>/dev/null | head -50 || echo \"No src dir found\")",
+      "Bash(ls /home/antho/FlowMix/)",
+      "Skill(anthropic-skills:minimalist-ui)",
+      "Skill(anthropic-skills:minimalist-ui:*)",
+      "Skill(anthropic-skills:impeccable)",
+      "Skill(anthropic-skills:impeccable:*)",
+      "Read(///wsl.localhost/ubuntu/home/antho/FlowMix/**)",
+      "Read(//mnt/wsl/ubuntu/home/antho/FlowMix/**)",
+      "Bash(wc -l //wsl.localhost/ubuntu/home/antho/FlowMix/FlowMix/index.html && echo \"OK\")",
+      "Read(///wsl.localhost/ubuntu/home/antho/FlowMix/FlowMix/**)",
+      "Read(///wsl.localhost/ubuntu/home/antho/FlowMix/FlowMix/js/**)",
+      "Read(///wsl.localhost/ubuntu//**)",
+      "Read(///wsl.localhost/ubuntu/mnt/**)",
+      "Bash(find \"//wsl.localhost/ubuntu/home/antho/FlowMix/FlowMix/server\" -type f | sort && echo \"---\" && wc -l //wsl.localhost/ubuntu/home/antho/FlowMix/FlowMix/server/**/*.js //wsl.localhost/ubuntu/home/antho/FlowMix/FlowMix/server/index.js 2>/dev/null)",
+      "Bash(npm install *)",
+      "Bash(ls /mnt/wsl/ 2>&1 || ls ~ 2>&1)",
+      "PowerShell(wsl -e bash -c \"cd /home/antho/FlowMix/FlowMix/server && npm install 2>&1\")",
+      "PowerShell(wsl -e bash -c \"cd /home/antho/FlowMix/FlowMix/server && timeout 5 node index.js 2>&1; echo 'EXIT:' $?\")"
+    ]
+  }
+}
